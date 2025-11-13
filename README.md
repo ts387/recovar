@@ -95,6 +95,47 @@ You can then use the recovar command after activating the environment. It is rec
 
 see details in [testing your installation](#small-test-dataset).
 
+### Installation on Apple Silicon (M-Series) Macs
+
+RECOVAR can run on Apple M-Series Macs using Metal GPU acceleration via JAX's experimental Metal backend. The core analysis pipeline is fully supported, though some simulation features may use CPU fallback.
+
+**Quick install:**
+
+    conda create --name recovar python=3.11 -y
+    conda activate recovar
+
+    # Install JAX with Metal support
+    pip install jax-metal
+
+    # Set compatibility flag for newer JAX versions
+    export ENABLE_PJRT_COMPATIBILITY=1
+
+    # Install other dependencies and recovar
+    pip install git+https://github.com/scikit-fmm/scikit-fmm.git
+    pip install torch  # Will use Metal (MPS) backend
+    pip install recovar
+
+**Test your installation:**
+
+    conda activate recovar
+    recovar run_test_dataset
+
+**Verify Metal GPU detection:**
+
+After installation, verify that JAX detects your Metal GPU:
+
+    python -c "import jax; print('Devices:', jax.devices()); print('Has GPU:', len([d for d in jax.devices() if 'gpu' in str(d).lower() or 'metal' in str(d).lower()]) > 0)"
+
+You should see Metal device(s) listed and "Has GPU: True".
+
+**Notes for M-Series users:**
+- JAX Metal support is experimental but actively improving
+- Core analysis features (covariance estimation, embedding, reconstruction) work with Metal
+- Simulation features may use CPU finufft fallback (acceptable performance for test datasets)
+- You may see warnings about experimental Metal support - these are expected
+- The `jax-finufft` package is optional and may not support Metal; it's only needed for certain simulation features
+- If you encounter issues, check that `ENABLE_PJRT_COMPATIBILITY=1` is set in your environment
+
 <!-- The code was tested on [this commit](https://github.com/ma-gilles/recovar/commit/6388bcc8646c535ae1b121952aa5c04e52402455).
 
 The code for the paper was run on [this commit](https://github.com/ma-gilles/recovar/commit/6388bcc8646c535ae1b121952aa5c04e52402455). -->
@@ -1432,6 +1473,37 @@ E.g, on the M-file:
     recovar pipeline M_particles.star --ctf ctf.pkl --poses pose.pkl -o v2_nocont_$ntilts --datadir=128 --mask=path_to_mask.mrc --tilt-series-ctf=v2  --ntilts=10 --tilt-series  --angle-per-tilt=3.0 --dose-per-tilt=2.93
 
 You can use all tilts by not passing the argument --ntilts.
+
+## Platform Support and Optional Dependencies
+
+### GPU Backend Support
+
+RECOVAR supports multiple GPU backends through JAX:
+- **NVIDIA GPUs** (CUDA): Full support, recommended for production use
+- **AMD GPUs** (ROCm): Supported via JAX's ROCm backend
+- **Apple Silicon** (Metal): Experimental support via `jax-metal` plugin
+
+All core analysis features work across all backends. See [Installation on Apple Silicon](#installation-on-apple-silicon-m-series-macs) for M-Series Mac setup.
+
+### Optional Dependencies
+
+**jax-finufft**: This package is only required for simulation features (generating synthetic test datasets from PDB files). The core RECOVAR analysis pipeline does not use jax-finufft:
+
+**Works WITHOUT jax-finufft:**
+- Main RECOVAR pipeline analysis
+- Covariance estimation
+- Embedding generation
+- Volume reconstruction
+- Heterogeneity analysis
+- All production cryo-EM processing workflows
+
+**Requires jax-finufft (optional):**
+- Generating synthetic test datasets from PDB atomic coordinates
+- Advanced simulation features using NUFFT-based discretization
+
+By default, recovar uses cubic/linear interpolation for all operations, which provides excellent performance and accuracy. The NUFFT option is provided for specialized use cases but is not necessary for typical workflows.
+
+On platforms without jax-finufft support (e.g., M-Series Macs), simulation features automatically fall back to the CPU-based `finufft` library with minimal performance impact.
 
 ## Limitations
 

@@ -1,10 +1,13 @@
--f https://download.pytorch.org/whl/torch_stable.html
-torch==2.3.1+cpu
+# For CUDA/Linux systems, use: torch==2.3.1+cpu with -f https://download.pytorch.org/whl/torch_stable.html
+# For M-Series Macs with Metal support, use: torch==2.3.1 (without +cpu suffix)
+torch==2.3.1
 dataframe_image==0.2.7
 finufft==2.3.1
 healpy==1.18.0
 ipython==8.12.3
 ipywidgets==8.1.5
+# jax_finufft is optional - only required for simulation features (not core analysis)
+# On M-Series Macs, jax_finufft may not support Metal and will fall back to CPU
 jax_finufft==0.1.0
 jaxopt==0.8.3
 jaxtyping==0.2.38

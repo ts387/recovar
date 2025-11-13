@@ -14,19 +14,21 @@ requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-    "Operating System :: POSIX :: Linux"
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X"
 ]
 
 # Merged dependencies from the original pyproject.toml and your requirements.txt.
-# Note: To install torch, use the pip flag:
-#       -f https://download.pytorch.org/whl/torch_stable.html
+# Note: For CUDA/Linux, install torch with: -f https://download.pytorch.org/whl/torch_stable.html
+# Note: For M-Series Macs, torch will automatically use Metal (MPS) backend
+# Note: jax_finufft is optional - only needed for simulation features, not core analysis
 dependencies = [
     "dataframe_image==0.2.7",
     "finufft==2.3.1",
     "healpy==1.18.0",
     "ipython==8.12.3",
     "ipywidgets==8.1.5",
-    "jax_finufft==0.1.0",
+    "jax_finufft==0.1.0",  # Optional: only for simulation, may not support Metal
     "jaxopt==0.8.3",
     "jaxtyping==0.2.38",
     "kneed==0.8.5",

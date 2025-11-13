@@ -272,10 +272,23 @@ def get_batch_of_indices_arange(n_images, batch_size, k):
 
 
 def jax_has_gpu():
+    """Check if JAX has access to GPU acceleration (CUDA, ROCm, or Metal)."""
     try:
+        # Try standard GPU devices (CUDA/ROCm)
         _ = jax.device_put(jax.numpy.ones(1), device=jax.devices('gpu')[0])
         return True
     except:
+        try:
+            # Check for Metal devices on Apple Silicon
+            devices = jax.devices()
+            for device in devices:
+                device_str = str(device).upper()
+                if 'METAL' in device_str or 'GPU' in device_str:
+                    # Try to actually use the device
+                    _ = jax.device_put(jax.numpy.ones(1), device=device)
+                    return True
+        except:
+            pass
         return False
 
 def dtype_to_real(rvs_dtype):
