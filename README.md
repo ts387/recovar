@@ -135,6 +135,14 @@ You should see Metal device(s) listed and "Has GPU: True".
 - You may see warnings about experimental Metal support - these are expected
 - The `jax-finufft` package is optional and may not support Metal; it's only needed for certain simulation features
 - If you encounter issues, check that `ENABLE_PJRT_COMPATIBILITY=1` is set in your environment
+- **Memory management**: Metal uses unified memory. RECOVAR uses a conservative 16GB default for batch sizing on Apple Silicon
+- **Float64/Complex128**: Metal has limited support for these data types; some operations may fall back to CPU. This affects performance but not correctness
+- **GPU memory reporting**: Metal devices don't support memory_stats(), so usage/peak reporting will show 0GB. This is expected behavior
+
+**Troubleshooting M-Series installation:**
+- If `jax_finufft` fails to install, you can skip it - it's only needed for simulation features
+- healpy and finufft may require compilation; ensure you have Xcode Command Line Tools: `xcode-select --install`
+- If you see "Platform 'METAL' is experimental" warnings, these are normal and expected
 
 <!-- The code was tested on [this commit](https://github.com/ma-gilles/recovar/commit/6388bcc8646c535ae1b121952aa5c04e52402455).
 
@@ -1484,6 +1492,12 @@ RECOVAR supports multiple GPU backends through JAX:
 - **Apple Silicon** (Metal): Experimental support via `jax-metal` plugin
 
 All core analysis features work across all backends. See [Installation on Apple Silicon](#installation-on-apple-silicon-m-series-macs) for M-Series Mac setup.
+
+**Metal Backend Specific Notes:**
+- Float64/Complex128 operations have limited Metal support; may fall back to CPU
+- Memory statistics (usage/peak) not available on Metal devices
+- Uses conservative 16GB memory estimate for batch sizing on Apple Silicon
+- Performance may vary from CUDA; core algorithms remain accurate
 
 ### Optional Dependencies
 

@@ -1,6 +1,7 @@
-# For CUDA/Linux systems, use: torch==2.3.1+cpu with -f https://download.pytorch.org/whl/torch_stable.html
-# For M-Series Macs with Metal support, use: torch==2.3.1 (without +cpu suffix)
-torch==2.3.1
+# PyTorch should be installed separately based on your platform:
+# For CUDA/Linux: pip install -f https://download.pytorch.org/whl/torch_stable.html torch==2.3.1+cpu
+# For M-Series Macs: pip install torch==2.3.1  (automatically uses Metal/MPS backend)
+# torch is NOT included here to avoid platform-specific issues
 dataframe_image==0.2.7
 finufft==2.3.1
 healpy==1.18.0

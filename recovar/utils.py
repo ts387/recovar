@@ -3,12 +3,24 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import mrcfile, os , psutil, pickle
+import platform
 from recovar.fourier_transform_utils import fourier_transform_utils
 from recovar import core
 ftu = fourier_transform_utils(jax.numpy)
 import more_itertools
 more_itertools.chunked
 logger = logging.getLogger(__name__)
+
+def is_apple_silicon():
+    """Check if running on Apple Silicon (M-Series Mac)."""
+    return platform.system() == 'Darwin' and platform.processor() == 'arm'
+
+def is_metal_device(device=None):
+    """Check if the given JAX device is a Metal device."""
+    if device is None:
+        device = jax.devices()[0]
+    device_str = str(device).upper()
+    return 'METAL' in device_str
 
 @functools.partial(jax.jit, static_argnums = [1,2])    
 def make_radial_image(average_image_PS, image_shape, extend_last_frequency = True):
@@ -51,21 +63,38 @@ def get_gpu_memory_total(device =0):
     if GPU_MEMORY_LIMIT is not None:
         return GPU_MEMORY_LIMIT
     if jax_has_gpu():
-        return int(jax.local_devices()[device].memory_stats()['bytes_limit']/1e9)
+        try:
+            return int(jax.local_devices()[device].memory_stats()['bytes_limit']/1e9)
+        except (AttributeError, KeyError):
+            # Metal devices don't support memory_stats()
+            # Use conservative default for Apple Silicon unified memory
+            if is_apple_silicon():
+                logger.info("Metal GPU detected. Using conservative 16GB memory estimate for Apple Silicon unified memory.")
+                return int(16)
+            logger.warning("GPU memory stats not available. Using default value of 80GB.")
+            return int(80)
     else:
         logger.warning("GPU not found. Using default value of 80GB for batching computation on CPU.")
         return int(80)
 
 def get_gpu_memory_used(device =0):
     if jax_has_gpu():
-        return int(jax.local_devices()[device].memory_stats()['bytes_in_use']/1e9)
+        try:
+            return int(jax.local_devices()[device].memory_stats()['bytes_in_use']/1e9)
+        except (AttributeError, KeyError):
+            # Metal devices don't support memory_stats()
+            return int(0)
     else:
         logger.warning("GPU not found. Using default value of 80GB for batching computation on CPU.")
         return int(0)
-    
+
 def get_peak_gpu_memory_used(device =0):
     if jax_has_gpu():
-        return int(jax.local_devices()[device].memory_stats()['peak_bytes_in_use']/1e9)
+        try:
+            return int(jax.local_devices()[device].memory_stats()['peak_bytes_in_use']/1e9)
+        except (AttributeError, KeyError):
+            # Metal devices don't support memory_stats()
+            return int(0)
     else:
         logger.warning("GPU not found. Peak =0")
         return int(0)
