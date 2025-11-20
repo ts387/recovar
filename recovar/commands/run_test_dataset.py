@@ -4,6 +4,7 @@ import os
 import jax
 import sys
 import argparse
+from recovar import utils
 
 def main():
 
@@ -30,19 +31,24 @@ def main():
     def error_message():
         print("--------------------------------------------")
         print("--------------------------------------------")
-        print("No GPU devices found by JAX. Please ensure that JAX is properly configured with CUDA and a compatible GPU. Some info from the JAX website (https://jax.readthedocs.io/en/latest/installation.html):\n"
-              "You must first install the NVIDIA driver. It is recommended to install the newest driver available from NVIDIA, but the driver version must be >= 525.60.13 for CUDA 12 on Linux. Then reinstall jax as follows:\n"
-              "pip uninstall jax jaxlib; \n pip install -U \"jax[cuda12]\"==0.5.0")
-        print("If you truly want to run on CPU, please run the script with the --cpu flag. Note that while this test will run, a real dataset will be extremely slow on CPU.")
+        print("No GPU devices found by JAX. Please ensure that JAX is properly configured with GPU acceleration.")
+        print("\nFor NVIDIA GPUs (CUDA):")
+        print("  - Install the NVIDIA driver (>= 525.60.13 for CUDA 12)")
+        print("  - Reinstall JAX: pip install -U \"jax[cuda12]\"==0.5.0")
+        print("\nFor Apple Silicon (M-Series Macs):")
+        print("  - Install JAX Metal: pip install jax-metal")
+        print("  - Set environment variable: export ENABLE_PJRT_COMPATIBILITY=1")
+        print("\nFor more info, see: https://jax.readthedocs.io/en/latest/installation.html")
+        print("\nIf you want to run on CPU, use the --cpu flag (note: will be very slow).")
         print("--------------------------------------------")
         print("--------------------------------------------")
         exit(1)
 
     def check_gpu():
         try:
-            gpu_devices = jax.devices('gpu')
+            gpu_devices = utils.get_gpu_devices()
             if gpu_devices:
-                print("GPU devices found:", gpu_devices)
+                print(f"GPU acceleration available ({len(gpu_devices)} device(s)):", gpu_devices)
             else:
                 error_message()
         except Exception as e:

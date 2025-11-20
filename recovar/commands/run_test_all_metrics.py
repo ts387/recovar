@@ -111,11 +111,11 @@ def main():
 
     def check_gpu():
         try:
-            gpu_devices = jax.devices('gpu')
+            gpu_devices = utils.get_gpu_devices()
             if gpu_devices:
-                logger.info(f"GPU devices found: {gpu_devices}")
+                logger.info(f"GPU acceleration available ({len(gpu_devices)} device(s)): {gpu_devices}")
             else:
-                error_message("No GPU devices found. Please ensure JAX is properly configured with CUDA.")
+                error_message("No GPU devices found. Please ensure JAX is properly configured with CUDA or Metal.")
         except Exception as e:
             error_message(f"Error checking GPU devices: {e}")
 

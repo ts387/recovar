@@ -320,6 +320,43 @@ def jax_has_gpu():
             pass
         return False
 
+def get_default_device():
+    """Get the default accelerator device (CUDA, Metal, or CPU).
+
+    Returns the first available GPU device (CUDA or Metal), or CPU if no GPU found.
+    Safe to use across all platforms - abstracts away CUDA vs Metal differences.
+    """
+    try:
+        # Try standard GPU device access (CUDA/ROCm)
+        return jax.devices('gpu')[0]
+    except:
+        # Fall back to searching all devices for GPU-like devices (Metal)
+        devices = jax.devices()
+        for device in devices:
+            device_str = str(device).upper()
+            if 'METAL' in device_str or 'GPU' in device_str:
+                return device
+        # No GPU found, return CPU
+        return jax.devices('cpu')[0]
+
+def get_gpu_devices():
+    """Get list of all GPU devices (CUDA, Metal, or empty list).
+
+    Returns list of GPU devices, compatible with both CUDA and Metal backends.
+    """
+    try:
+        # Try standard GPU device access (CUDA/ROCm)
+        return jax.devices('gpu')
+    except:
+        # Fall back to filtering all devices for GPU-like devices (Metal)
+        devices = jax.devices()
+        gpu_devices = []
+        for device in devices:
+            device_str = str(device).upper()
+            if 'METAL' in device_str or 'GPU' in device_str:
+                gpu_devices.append(device)
+        return gpu_devices
+
 def dtype_to_real(rvs_dtype):
     return rvs_dtype.type(0).real.dtype
 

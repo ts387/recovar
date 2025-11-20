@@ -796,8 +796,10 @@ def compute_projected_covariance(experiment_datasets, mean_estimate, basis, volu
     rhs = vec(rhs)
 
     if change_device:
-        rhs = jax.device_put(rhs, jax.devices("gpu")[0])
-        lhs = jax.device_put(lhs, jax.devices("gpu")[0])
+        # Use safe device selection that works with both CUDA and Metal
+        default_device = utils.get_default_device()
+        rhs = jax.device_put(rhs, default_device)
+        lhs = jax.device_put(lhs, default_device)
     # lhs_this = jax.device_put(lhs_this, jax.devices("gpu")[0])
 
     covar = jax.scipy.linalg.solve( lhs ,rhs, assume_a='pos')
